@@ -35,9 +35,21 @@ type Martini struct {
 }
 
 // New creates a bare bones Martini instance. Use this method if you want to have full control over the middleware that is used.
-func New() *Martini {
-	m := &Martini{Injector: inject.New(), action: func() {}, logger: log.New(os.Stdout, "[martini] ", 0)}
-	m.Map(m.logger)
+func New(initials ...interface{}) *Martini {
+	m := &Martini{Injector: inject.New(), action: func() {}}
+	for i := range initials {
+		switch initials[i].(type) {
+		case *log.Logger:
+			logger := initials[i].(*log.Logger)
+			m.logger = logger
+			m.Map(logger)
+		}
+
+	}
+	if m.logger == nil {
+		m.logger = log.New(os.Stdout, "[martini] ", 0)
+		m.Map(m.logger)
+	}
 	m.Map(defaultReturnHandler())
 	return m
 }
